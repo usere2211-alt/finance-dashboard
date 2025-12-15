@@ -22,10 +22,42 @@
             color: #e74c3c;
             text-align: center;
         }
-        p {
-            text-align: center;
-            color: #666;
-            font-size: 18px;
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            background: #e74c3c;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
         }
         .back-link {
             display: inline-block;
@@ -37,12 +69,80 @@
         .back-link:hover {
             color: #764ba2;
         }
+        .expenses-list {
+            margin-top: 40px;
+        }
+        .expense-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .expense-amount {
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .expense-category {
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📊 Your Expenses</h1>
-        <p>Your expense tracking will appear here soon!</p>
+        <h1>📊 Add Expense</h1>
+        
+        <form method="POST" action="/add_expense">
+            <div class="form-group">
+                <label>Amount ($)</label>
+                <input type="number" name="amount" step="0.01" required placeholder="50.00">
+            </div>
+            
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" name="description" required placeholder="Grocery shopping">
+            </div>
+            
+            <div class="form-group">
+                <label>Category</label>
+                <select name="category" required>
+                    <option value="">-- Select Category --</option>
+                    <option value="Food">Food & Dining</option>
+                    <option value="Transport">Transportation</option>
+                    <option value="Shopping">Shopping</option>
+                    <option value="Entertainment">Entertainment</option>
+                    <option value="Bills">Bills & Utilities</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            
+            <button type="submit">💰 Add Expense</button>
+        </form>
+
+        <div class="expenses-list">
+            <h2>Recent Expenses</h2>
+            {% if expenses %}
+                {% for expense in expenses %}
+                <div class="expense-item">
+                    <div>
+                        <strong>{{ expense.description }}</strong><br>
+                        <span class="expense-category">{{ expense.category }}</span>
+                    </div>
+                    <div class="expense-amount">${{ expense.amount }}</div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p style="text-align: center; color: #999;">No expenses yet. Add your first one above!</p>
+            {% endif %}
+        </div>
+        
         <a href="/" class="back-link">← Back to Dashboard</a>
     </div>
 </body>
