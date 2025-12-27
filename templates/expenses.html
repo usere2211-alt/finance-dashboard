@@ -134,8 +134,20 @@
                     <div>
                         <strong>{{ expense.description }}</strong><br>
                         <span class="expense-category">{{ expense.category }}</span>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div class="expense-amount">${{ expense.amount }}</div>
+                        <a href="/edit_expense/{{ loop.index0 }}" 
+                           style="background: #3498db; color: white; padding: 8px 15px; 
+                                  border-radius: 5px; text-decoration: none; font-size: 14px;">
+                            ✏️ Edit
+                        </a>
+                        <a href="/delete_expense/{{ loop.index0 }}" 
+                           onclick="return confirm('Delete this expense?')"
+                           style="background: #e74c3c; color: white; padding: 8px 15px; 
+                                  border-radius: 5px; text-decoration: none; font-size: 14px;">
+                            🗑️ Delete
+                        </a>
                     </div>
-                    <div class="expense-amount">${{ expense.amount }}</div>
                 </div>
                 {% endfor %}
             {% else %}

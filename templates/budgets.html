@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Budget Tracker</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 900px;
+            margin: 50px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .form-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+        .form-row {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+        }
+        .form-group {
+            flex: 1;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #764ba2;
+        }
+        .budget-item {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .budget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .budget-category {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+        .budget-amounts {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .progress-bar-container {
+            background: #e0e0e0;
+            border-radius: 10px;
+            height: 25px;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress-bar {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            transition: width 0.3s ease;
+        }
+        .progress-bar.green {
+            background: linear-gradient(90deg, #27ae60, #2ecc71);
+        }
+        .progress-bar.yellow {
+            background: linear-gradient(90deg, #f39c12, #f1c40f);
+        }
+        .progress-bar.red {
+            background: linear-gradient(90deg, #e74c3c, #c0392b);
+        }
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💰 Budget Tracker</h1>
+
+        <!-- Set Budget Form -->
+        <div class="form-section">
+            <h3 style="margin-top: 0;">Set Budget Limit</h3>
+            <form method="POST" action="/set_budget">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select name="category" required>
+                            <option value="Food">Food & Dining</option>
+                            <option value="Transport">Transportation</option>
+                            <option value="Shopping">Shopping</option>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Bills">Bills & Utilities</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Monthly Budget ($)</label>
+                        <input type="number" name="budget" step="0.01" required placeholder="500.00">
+                    </div>
+                    <button type="submit">Set Budget</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Budget Status -->
+        <h3>Budget Overview</h3>
+        {% if budget_status %}
+            {% for category, status in budget_status.items() %}
+            <div class="budget-item">
+                <div class="budget-header">
+                    <div class="budget-category">{{ category }}</div>
+                    <a href="/delete_budget/{{ category }}" class="delete-btn" 
+                       onclick="return confirm('Delete this budget?')">🗑️ Delete</a>
+                </div>
+
+                <div class="budget-amounts">
+                    <span><strong>Spent:</strong> ${{ "%.2f"|format(status.spent) }}</span>
+                    <span><strong>Budget:</strong> ${{ "%.2f"|format(status.budget) }}</span>
+                    <span><strong>Remaining:</strong> ${{ "%.2f"|format(status.remaining) }}</span>
+                </div>
+
+                <div class="progress-bar-container">
+                    <div class="progress-bar {{ status.color }}" 
+                         style="width: {{ [status.percentage, 100]|min }}%">
+                        {{ "%.0f"|format(status.percentage) }}%
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="text-align: center; color: #999;">No budgets set yet. Add your first budget above!</p>
+        {% endif %}
+
+        <a href="/" class="back-link">← Back to Dashboard</a>
+    </div>
+</body>
+</html>

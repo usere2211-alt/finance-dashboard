@@ -1,1 +1,10 @@
 date,amount,description,category
+2025-12-19,50,groceries,Food
+2025-12-19,30,coffee,Food
+2025-12-19,120,uber,Transport
+2025-12-26,300,movies,Entertainment
+2025-12-26,1000,fuel,Transport
+2025-12-27,800,restaruant,Food
+2025-12-27,5000,flight,Transport
+2025-12-27,20000,credit card,Bills
+2025-12-27,10000,season sale,Shopping
