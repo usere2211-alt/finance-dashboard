@@ -6,6 +6,9 @@ from flask import Flask, redirect, render_template, request, send_file
 from sklearn.linear_model import LinearRegression
 import numpy as np
 from datetime import datetime, timedelta  # Add timedelta here!
+from babel.numbers import format_currency
+
+
 
 app = Flask(__name__)
 
@@ -129,6 +132,10 @@ def home():
     }
 
     return render_template('home.html', stats=stats)
+
+@app.template_filter('inr')
+def format_inr(value):
+    return format_currency(value, 'INR', locale='en_IN')
     
 @app.route('/expenses')
 def expenses():
