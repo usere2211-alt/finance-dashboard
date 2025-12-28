@@ -3,48 +3,71 @@
 <head>
     <title>Expenses - Finance Dashboard</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            margin: 0;
             padding: 20px;
             min-height: 100vh;
         }
+
         .container {
-            max-width: 800px;
-            margin: 50px auto;
+            max-width: 900px;
+            margin: 30px auto;
             background: white;
             padding: 40px;
             border-radius: 15px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
         }
+
         h1 {
             color: #e74c3c;
             text-align: center;
+            margin-bottom: 30px;
+            font-size: 32px;
         }
+
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        /* Form Styles */
         .form-group {
             margin-bottom: 20px;
         }
+
         label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             color: #333;
-            font-weight: bold;
+            font-weight: 600;
+            font-size: 14px;
         }
+
         input, select {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
             border-radius: 8px;
-            font-size: 16px;
-            box-sizing: border-box;
+            font-size: 15px;
+            transition: all 0.3s;
         }
+
         input:focus, select:focus {
             outline: none;
             border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
+
         button {
-            background: #e74c3c;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
             color: white;
             padding: 15px 30px;
             border: none;
@@ -54,75 +77,187 @@
             cursor: pointer;
             width: 100%;
             transition: all 0.3s;
+            margin-top: 10px;
         }
+
         button:hover {
-            background: #c0392b;
             transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(231, 76, 60, 0.4);
         }
-        .back-link {
-            display: inline-block;
-            margin-top: 20px;
-            color: #667eea;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        .back-link:hover {
-            color: #764ba2;
-        }
+
+        /* Expenses List */
         .expenses-list {
-            margin-top: 40px;
+            margin-top: 50px;
         }
+
         .expense-item {
             background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 20px;
             align-items: center;
+            transition: all 0.3s;
+            border: 2px solid transparent;
         }
-        .expense-amount {
-            color: #e74c3c;
-            font-weight: bold;
-            font-size: 18px;
+
+        .expense-item:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
         }
+
+        .expense-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .expense-description {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .expense-meta {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
         .expense-category {
             background: #667eea;
             color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 14px;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .expense-date {
+            color: #999;
+            font-size: 13px;
+        }
+
+        .expense-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .expense-amount {
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 20px;
+            margin-right: 10px;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .edit-btn {
+            background: #3498db;
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 30px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            color: #764ba2;
+            transform: translateX(-5px);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-size: 15px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+            }
+
+            .expense-item {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .expense-actions {
+                justify-content: space-between;
+                width: 100%;
+            }
+
+            .expense-amount {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>📊 Add Expense</h1>
-        
+
         <form method="POST" action="/add_expense">
             <div class="form-group">
                 <label>Amount ($)</label>
-                <input type="number" name="amount" step="0.01" required placeholder="50.00">
+                <input type="number" name="amount" step="0.01" min="0.01" required placeholder="50.00">
             </div>
-            
+
             <div class="form-group">
                 <label>Description</label>
-                <input type="text" name="description" required placeholder="Grocery shopping">
+                <input type="text" name="description" required placeholder="Grocery shopping" maxlength="100">
             </div>
-            
+
             <div class="form-group">
                 <label>Category</label>
                 <select name="category" required>
                     <option value="">-- Select Category --</option>
-                    <option value="Food">Food & Dining</option>
-                    <option value="Transport">Transportation</option>
-                    <option value="Shopping">Shopping</option>
-                    <option value="Entertainment">Entertainment</option>
-                    <option value="Bills">Bills & Utilities</option>
-                    <option value="Other">Other</option>
+                    <option value="Food">🍔 Food & Dining</option>
+                    <option value="Transport">🚗 Transportation</option>
+                    <option value="Shopping">🛍️ Shopping</option>
+                    <option value="Entertainment">🎬 Entertainment</option>
+                    <option value="Bills">💡 Bills & Utilities</option>
+                    <option value="Other">📌 Other</option>
                 </select>
             </div>
-            
+
             <button type="submit">💰 Add Expense</button>
         </form>
 
@@ -131,30 +266,33 @@
             {% if expenses %}
                 {% for expense in expenses %}
                 <div class="expense-item">
-                    <div>
-                        <strong>{{ expense.description }}</strong><br>
-                        <span class="expense-category">{{ expense.category }}</span>
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <div class="expense-amount">${{ expense.amount }}</div>
-                        <a href="/edit_expense/{{ loop.index0 }}" 
-                           style="background: #3498db; color: white; padding: 8px 15px; 
-                                  border-radius: 5px; text-decoration: none; font-size: 14px;">
+                    <div class="expense-info">
+                        <div class="expense-description">{{ expense.description }}</div>
+                        <div class="expense-meta">
+                            <span class="expense-category">{{ expense.category }}</span>
+                            <span class="expense-date">📅 {{ expense.date }}</span>
+                        </div>
+                    </div>
+                    <div class="expense-actions">
+                        <div class="expense-amount">${{ "%.2f"|format(expense.amount|float) }}</div>
+                        <a href="/edit_expense/{{ loop.index0 }}" class="action-btn edit-btn">
                             ✏️ Edit
                         </a>
                         <a href="/delete_expense/{{ loop.index0 }}" 
-                           onclick="return confirm('Delete this expense?')"
-                           style="background: #e74c3c; color: white; padding: 8px 15px; 
-                                  border-radius: 5px; text-decoration: none; font-size: 14px;">
+                           onclick="return confirm('Are you sure you want to delete this expense?')"
+                           class="action-btn delete-btn">
                             🗑️ Delete
                         </a>
                     </div>
                 </div>
                 {% endfor %}
             {% else %}
-                <p style="text-align: center; color: #999;">No expenses yet. Add your first one above!</p>
+                <div class="empty-state">
+                    <p>📭 No expenses yet. Add your first one above!</p>
+                </div>
             {% endif %}
         </div>
-        
+
         <a href="/" class="back-link">← Back to Dashboard</a>
     </div>
 </body>

@@ -3,6 +3,9 @@ import os
 from datetime import datetime
 import io
 from flask import Flask, redirect, render_template, request, send_file
+from sklearn.linear_model import LinearRegression
+import numpy as np
+from datetime import datetime, timedelta  # Add timedelta here!
 
 app = Flask(__name__)
 
@@ -56,12 +59,61 @@ def get_top_category(filename):
 
 @app.route("/")
 def home():
-    total_expenses = calculate_total(EXPENSES_FILE)
-    total_income = calculate_total(INCOME_FILE)
+    # Get filter parameters
+    filter_type = request.args.get('filter', 'all')
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+
+    # Calculate date ranges based on filter type
+    today = datetime.now()
+
+    if filter_type == 'this_month':
+        start_date = today.replace(day=1).strftime('%Y-%m-%d')
+        end_date = today.strftime('%Y-%m-%d')
+    elif filter_type == 'last_month':
+        first_day_this_month = today.replace(day=1)
+        last_day_last_month = first_day_this_month - timedelta(days=1)
+        first_day_last_month = last_day_last_month.replace(day=1)
+        start_date = first_day_last_month.strftime('%Y-%m-%d')
+        end_date = last_day_last_month.strftime('%Y-%m-%d')
+    elif filter_type == 'last_3_months':
+        start_date = (today - timedelta(days=90)).strftime('%Y-%m-%d')
+        end_date = today.strftime('%Y-%m-%d')
+    # If filter_type == 'all' or custom dates, use start_date/end_date from form
+
+    # Apply date filter to expenses
+    if filter_type == 'all' and not start_date and not end_date:
+        filtered_expenses = get_expenses()
+    else:
+        filtered_expenses = filter_expenses_by_date(start_date, end_date)
+
+    # Calculate stats from filtered expenses
+    total_expenses = sum(float(e['amount']) for e in filtered_expenses)
+    total_income = calculate_total(INCOME_FILE)  # TODO: Add income filtering later
     balance = total_income - total_expenses
-    top_category, top_amount = get_top_category(EXPENSES_FILE)
-    category_breakdown = get_category_breakdown()
-    budget_status = get_budget_status()  # ✅ NEW
+
+    # Get category breakdown from filtered expenses
+    category_breakdown = {}
+    for expense in filtered_expenses:
+        category = expense['category']
+        amount = float(expense['amount'])
+        if category in category_breakdown:
+            category_breakdown[category] += amount
+        else:
+            category_breakdown[category] = amount
+
+    # Get top category
+    top_category = None
+    top_amount = 0
+    if category_breakdown:
+        top_category = max(category_breakdown, key=category_breakdown.get)
+        top_amount = category_breakdown[top_category]
+
+    # ML Predictions (still use all data for predictions)
+    budget_status = get_budget_status()
+    ml_prediction = predict_next_month_ml()
+    simple_prediction = predict_next_month_spending()
+    monthly_data = get_monthly_spending()
 
     stats = {
         'total_expenses': total_expenses,
@@ -70,7 +122,10 @@ def home():
         'top_category': top_category,
         'top_amount': top_amount,
         'category_breakdown': category_breakdown,
-        'budget_status': budget_status  # ✅ NEW
+        'budget_status': budget_status,
+        'ml_prediction': ml_prediction,
+        'simple_prediction': simple_prediction,
+        'num_months': len(monthly_data)
     }
 
     return render_template('home.html', stats=stats)
@@ -95,9 +150,20 @@ def add_expense():
     init_csv(EXPENSES_FILE, ['date', 'amount', 'description', 'category'])
 
     try:
-        amount = request.form.get('amount')
+        amount_str = request.form.get('amount')
         description = request.form.get('description')
         category = request.form.get('category')
+
+        # ✅ Validate amount is a valid number
+        try:
+            amount = float(amount_str)
+            if amount <= 0:
+                print("Error: Amount must be positive")
+                return redirect('/expenses')
+        except (ValueError, TypeError):
+            print(f"Error: Invalid amount '{amount_str}'")
+            return redirect('/expenses')
+
         date = datetime.now().strftime('%Y-%m-%d')
 
         with open(EXPENSES_FILE, 'a', newline='') as f:
@@ -310,6 +376,93 @@ def get_monthly_spending():
 
     return monthly_totals
 
+def filter_expenses_by_date(start_date=None, end_date=None):
+    """
+    Filter expenses by date range
+    """
+    expenses = get_expenses()
+
+    if not start_date and not end_date:
+        return expenses
+
+    filtered = []
+    for expense in expenses:
+        expense_date = expense['date']
+
+        # Case 1: Both dates provided
+        if start_date and end_date:
+            if expense_date >= start_date and expense_date <= end_date:
+                filtered.append(expense)  # Fix this
+
+        # Case 2: Only start_date provided (show all AFTER this date)
+        elif start_date:
+            if expense_date >= start_date:
+                filtered.append(expense)  # Add this
+
+        # Case 3: Only end_date provided (show all BEFORE this date)
+        elif end_date:
+            if expense_date <= end_date:
+                filtered.append(expense)  # Add this
+
+    return filtered
+
+def predict_next_month_spending():
+    """
+    Predict next month's spending based on historical average
+    Returns: predicted amount (float)
+    """
+    monthly_data = get_monthly_spending()
+
+    if not monthly_data:
+        return 0
+
+    total = sum(monthly_data.values())  # ✅ Fixed!
+    num_months = len(monthly_data)      # ✅ Perfect!
+    average = total / num_months         # ✅ Perfect!
+
+    return average
+
+def predict_next_month_ml():
+    """
+    Use Linear Regression to predict next month's spending
+    Returns: predicted amount (float)
+    """
+    monthly_data = get_monthly_spending()
+
+    # Need at least 2 months for ML
+    if len(monthly_data) < 2:
+        # Fallback to simple average
+        return predict_next_month_spending()
+
+    # Prepare data for ML
+    months = sorted(monthly_data.keys())
+
+    # X = month numbers (0, 1, 2, ...)
+    X = []
+    for i in range(len(months)):
+        X.append([i])
+
+    # y = spending amounts
+    y = []
+    for month in months:
+        y.append(monthly_data[month])
+
+    # Create and train the model
+    model = LinearRegression()
+    model.fit(X, y)
+
+    # Predict next month
+    next_month_number = [[len(months)]]
+    prediction = model.predict(next_month_number)
+
+    return prediction[0]
+
+
+@app.route('/test_prediction')
+def test_prediction():
+    prediction = predict_next_month_spending()
+    return f"Predicted next month spending: ${prediction:.2f}"
+
 @app.route('/test_monthly')  # ✅ Test route right after
 def test_monthly():
     monthly = get_monthly_spending()
@@ -472,6 +625,48 @@ def export_all():
         as_attachment=True,
         download_name='financial_report.csv'
     )
+
+@app.route('/test_ml')
+def test_ml():
+    monthly_data = get_monthly_spending()
+    num_months = len(monthly_data)
+
+    prediction = predict_next_month_ml()
+    simple = predict_next_month_spending()
+
+    return f"""
+    <h2>💡 Prediction Comparison:</h2>
+    <p><strong>Months of Data:</strong> {num_months}</p>
+    <p><strong>Simple Average:</strong> ${simple:.2f}</p>
+    <p><strong>ML Prediction (Linear Regression):</strong> ${prediction:.2f}</p>
+    <p><strong>Difference:</strong> ${abs(prediction - simple):.2f}</p>
+    <hr>
+    <p><em>The ML model detects trends - if spending is increasing, it predicts higher than average!</em></p>
+    """
+
+@app.route('/test_filter')
+def test_filter():
+    # Test 1: All expenses
+    all_expenses = filter_expenses_by_date()
+
+    # Test 2: Only December 2025
+    december = filter_expenses_by_date('2025-12-01', '2025-12-31')
+
+    # Test 3: From November onwards
+    from_nov = filter_expenses_by_date('2025-11-01', None)
+
+    return f"""
+    <h2>Date Filter Test:</h2>
+    <p><strong>All Expenses:</strong> {len(all_expenses)} items</p>
+    <p><strong>December Only:</strong> {len(december)} items</p>
+    <p><strong>From November:</strong> {len(from_nov)} items</p>
+    <hr>
+    <h3>December Expenses:</h3>
+    <ul>
+    {''.join(f"<li>{e['date']} - {e['description']} - ${e['amount']}</li>" for e in december)}
+    </ul>
+    """
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8080, debug=True)
